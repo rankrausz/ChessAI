@@ -22,7 +22,7 @@ class Board:
         """
         create square instances
         """
-        self.squares = [[] for col in range(COLS)]  # [[-1 for row in range(ROWS)] for col in range(COLS)]
+        self.squares = [[] for col in range(COLS)]  # empty 8X8 list
 
         for row in range(ROWS):
             for col in range(COLS):
