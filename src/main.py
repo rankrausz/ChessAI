@@ -11,7 +11,7 @@ class Main:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption(("Chess"))
+        pygame.display.set_caption("Chess")
 
         self.board = Board()
         self.game = GUI(self.board)  # reference

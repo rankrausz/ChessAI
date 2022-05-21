@@ -87,7 +87,6 @@ class Board:
         """
         move piece to target square
         """
-
         self.clicked_square.change_piece(None)
         target.change_piece(piece)
         piece.moved = True
@@ -120,25 +119,25 @@ class Board:
         return ret
 
     def pawn_moves(self, pawn, row, col):
-        dir = pawn.direction
+        updown = pawn.direction
         ret = []
 
         # take moves
-        take_moves = [(row + dir, col - 1), (row + dir, col + 1)]
+        take_moves = [(row + updown, col - 1), (row + updown, col + 1)]
         for move_row, move_col in take_moves:
             if Square.in_range(move_row, move_col):
                 if self.squares[move_row][move_col].has_rival_piece(pawn.color):
                     ret.append((move_row, move_col))
 
         # checking one step forward
-        move_row, move_col = row + dir, col
+        move_row, move_col = row + updown, col
         if Square.in_range(move_row, move_col):
             if self.squares[move_row][move_col].is_empty():
                 ret.append((move_row, move_col))
 
         # checking two steps forward
         if not pawn.moved:
-            move_row, move_col = row + 2 * dir, col
+            move_row, move_col = row + 2 * updown, col
             if Square.in_range(move_row, move_col):
                 if not self.squares[move_row][move_col].has_piece():
                     ret.append((move_row, move_col))
@@ -175,7 +174,6 @@ class Board:
     def king_moves(self, piece, row, col):
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
         ret = []
-        move_row, move_col = row, col
 
         def valid_king_move(r, c):
             # check if next move is valid
@@ -186,11 +184,11 @@ class Board:
             return False
 
         for i, j in directions:
-            if valid_king_move(move_row + i, move_col + j):
-                ret.append((move_row + i, move_col + j))
+            if valid_king_move(row + i, col + j):
+                ret.append((row + i, col + j))
         return ret
 
-    def king_sees(self, piece, row, col):
+    def king_sees(self, row, col):
         ret = []
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
         for i, j in directions:
@@ -233,7 +231,7 @@ class Board:
             return self.knight_moves(piece, row, col)
 
         elif piece.name == "king":
-            return self.king_sees(piece, row, col)
+            return self.king_sees(row, col)
 
         # bishop, rook or queen
         else:

@@ -9,11 +9,7 @@ class GUI:
         self.squares = self.board.squares
 
     def draw_background(self, surface):
-        # for row in range(ROWS):
-        #     for col in range(COLS):
-        #         color = COLORS[(row+col) % 2]
-        #         rect = (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE) ##
-        #         pygame.draw.rect(surface, color, rect)
+
         for squares_row in self.squares:
             for square in squares_row:
                 row, col = square.row, square.col
