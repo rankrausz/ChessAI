@@ -4,17 +4,13 @@ from piece import *
 from move import Move
 import copy
 
+
 class Board:
 
     def __init__(self):
         self.squares = []
         self.clicked_square = None
-        # self.possible_squares = []
         self.possible_moves = []
-        self.white_pieces = []
-        self.black_pieces = []
-        self.white_sees = []
-        self.black_sees = []
 
         self._create()
         self._add_pieces("white")
@@ -31,12 +27,6 @@ class Board:
                 new_square = Square(row, col)
                 self.squares[row].append(new_square)
 
-    def add_to_player_pieces(self, color, piece):
-        if color == "white":
-            self.white_pieces.append(piece)
-        else:
-            self.black_pieces.append(piece)
-
     def _add_pieces(self, color):
         """
         add all pieces of single color to the starting positions
@@ -44,47 +34,91 @@ class Board:
         pawn_row, other_row = (6, 7) if color == "white" else (1, 0)
 
         # self.squares[3][4].change_piece(King("white"))
-        # self.squares[3][4].change_piece(King("white"))
 
         # pawns
         for col in range(COLS):
             pawn = Pawn(color)
             pawn.pos = (pawn_row, col)
             self.squares[pawn_row][col].change_piece(pawn)
-            self.add_to_player_pieces(color, pawn)
 
         # knights
         for col in [1, 6]:
             knight = Knight(color)
             knight.pos = (other_row, col)
             self.squares[other_row][col].change_piece(knight)
-            self.add_to_player_pieces(color, knight)
 
         # bishops
         for col in [2, 5]:
             bishop = Bishop(color)
             bishop.pos = (other_row, col)
             self.squares[other_row][col].change_piece(bishop)
-            self.add_to_player_pieces(color, bishop)
 
         # rooks
         for col in [0, 7]:
             rook = Rook(color)
             rook.pos = (other_row, col)
             self.squares[other_row][col].change_piece(Rook(color))
-            self.add_to_player_pieces(color, rook)
 
         # queen
         queen = Queen(color)
         queen.pos = (other_row, 3)
         self.squares[other_row][3].change_piece(queen)
-        self.add_to_player_pieces(color, queen)
 
         # king
         king = King(color)
         king.pos = (other_row, 4)
         self.squares[other_row][4].change_piece(king)
-        self.add_to_player_pieces(color, king)
+
+    # ============================= Moving Functions =============================
+
+    def can_move(self, move):
+        """
+        try a move to see if there is check
+        """
+        ret = True
+
+        # save r/l castle values
+        l_castle = move.l_castle
+        r_castle = move.r_castle
+        move.l_castle, move.r_castle = False, False  # changed in order to make move normally
+        # will be restored later
+        # saving original pieces
+        start_piece = move.start.piece
+        target_piece = move.target.piece
+
+        # copying pieces to perform moves on them
+        tmp_start_piece = copy.deepcopy(start_piece)
+        tmp_target_piece = copy.deepcopy(target_piece)
+
+        # switching to copied pieces
+        move.start.piece = tmp_start_piece
+        move.target.piece = tmp_target_piece
+
+        self.make_move(move)  # making the move
+
+        if self.in_check(start_piece.color):
+            ret = False
+
+        self.make_reverse_move(move)  # un-making the move
+
+        # returning the original pieces to their
+        move.start.piece = start_piece
+        move.target.piece = target_piece
+
+        move.l_castle = l_castle
+        move.r_castle = r_castle
+
+        if r_castle:
+            # need to also check king move one square right
+            target = self.squares[move.start.row][5]  # one step right
+            return ret and self.can_move(Move(move.start, target))
+
+        if l_castle:
+            # need to also check king move one square left
+            target = self.squares[move.start.row][3]  # one step left
+            return ret and self.can_move(Move(move.start, target))
+
+        return ret
 
     def make_move(self, move):
         """
@@ -137,14 +171,64 @@ class Board:
             target = self.squares[row][0]
             self.make_move(Move(start, target))
 
-    def get_square(self, piece):
+    def can_castle(self, color):
         """
-        get the square holding a certain piece
+        :returns list of 2 bools, [can_castle_left_side, can_castle_right_side]
         """
-        for square_row in self.squares:
-            for square in square_row:
-                if square.piece == piece:
-                    return square
+        can_castle_left_side, can_castle_right_side = False, False
+        king_square = self.get_king_square(color)
+        row = king_square.row
+        col = king_square.col
+
+        if king_square.piece.moved:
+            return [False, False]
+
+        right_rook = self.squares[row][7].piece
+        if right_rook:
+            if right_rook.name == "rook" and not right_rook.moved \
+                                         and not self.squares[row][col + 1].piece \
+                                         and not self.squares[row][col + 2].piece:
+                # these are the conditions for castling
+                can_castle_right_side = True
+
+        left_rook = self.squares[row][0].piece
+        if left_rook:
+            if left_rook.name == "rook" and not left_rook.moved \
+                    and not self.squares[row][col - 1].piece \
+                    and not self.squares[row][col - 2].piece \
+                    and not self.squares[row][col - 3].piece:
+                can_castle_left_side = True
+
+        return [can_castle_left_side, can_castle_right_side]
+
+    # ========================= Calculating possible moves ========================
+
+    def calc_moves(self, piece, row, col):
+        """
+        calculate all possible moves for a piece in a specific location (row, col)
+        :return a list of locations (row, col) representing possible new location
+        """
+        moves = []
+        if piece.name == "pawn":
+            moves = self.pawn_moves(piece, row, col)
+
+        elif piece.name == "knight":
+            moves = self.knight_moves(piece, row, col)
+
+        elif piece.name == "king":
+            moves = self.king_moves(piece, row, col)
+
+        # bishop, rook or queen
+        else:
+            moves = self.line_moves(piece, row, col)
+
+        ret = []
+        # start = self.squares[row][col]
+        for move in moves:
+            if self.can_move(move):
+                ret.append(move)
+
+        return ret
 
     def knight_moves(self, knight, row, col):
         directions = knight.DIRECTIONS  # all knight moves
@@ -257,73 +341,7 @@ class Board:
                 ret.append(castle)
         return ret
 
-    def can_castle(self, color):
-        """
-        :returns list of 2 bools, [can_castle_left_side, can_castle_right_side]
-        """
-        can_castle_left_side, can_castle_right_side = False, False
-        king_square = self.get_king_square(color)
-        row = king_square.row
-        col = king_square.col
-
-        if king_square.piece.moved:
-            return [False, False]
-
-        right_rook = self.squares[row][7].piece
-        if right_rook:
-            if right_rook.name == "rook" and not right_rook.moved \
-                                         and not self.squares[row][col + 1].piece \
-                                         and not self.squares[row][col + 2].piece:
-                # these are the conditions for castling
-                can_castle_right_side = True
-
-        left_rook = self.squares[row][0].piece
-        if left_rook:
-            if left_rook.name == "rook" and not left_rook.moved \
-                    and not self.squares[row][col - 1].piece \
-                    and not self.squares[row][col - 2].piece \
-                    and not self.squares[row][col - 3].piece:
-                can_castle_left_side = True
-
-        return [can_castle_left_side, can_castle_right_side]
-
-    def calc_moves(self, piece, row, col):
-        """
-        calculate all possible moves for a piece in a specific location (row, col)
-        :return a list of locations (row, col) representing possible new location
-        """
-        moves = []
-        if piece.name == "pawn":
-            moves = self.pawn_moves(piece, row, col)
-
-        elif piece.name == "knight":
-            moves = self.knight_moves(piece, row, col)
-
-        elif piece.name == "king":
-            moves = self.king_moves(piece, row, col)
-
-        # bishop, rook or queen
-        else:
-            moves = self.line_moves(piece, row, col)
-
-        ret = []
-        # start = self.squares[row][col]
-        for move in moves:
-            if self.can_move(move):
-                ret.append(move)
-
-        return ret
-
-    def king_sees(self, row, col):
-        """
-        returns list of squares a king in (row, col) sees
-        """
-        ret = []
-        directions = King.DIRECTIONS
-        for add_to_row, add_to_col in directions:
-            if Square.in_range(row+add_to_row, col+add_to_col):
-                ret.append(self.squares[row+add_to_row][col+add_to_col])
-        return ret
+    # ============================= Calculating sees ===============================
 
     def calc_sees(self, piece, row, col):
         """
@@ -352,6 +370,17 @@ class Board:
                 ret.append(move.target)
             return ret
 
+    def king_sees(self, row, col):
+        """
+        returns list of squares a king in (row, col) sees
+        """
+        ret = []
+        directions = King.DIRECTIONS
+        for add_to_row, add_to_col in directions:
+            if Square.in_range(row+add_to_row, col+add_to_col):
+                ret.append(self.squares[row+add_to_row][col+add_to_col])
+        return ret
+
     def rival_sees(self, color):
         """
         returns list of squares rival sees
@@ -368,6 +397,18 @@ class Board:
         #     for piece in self.black_pieces:
         #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])
         return ret
+
+    # =========================== Game, get's & others ===============================
+
+    def game_over(self, color):
+        all_moves = []
+        rival_pieces = self.get_rival_pieces(color)
+        for square in rival_pieces:
+            all_moves += self.calc_moves(square.piece, square.row, square.col)
+        # print(all_moves)
+        if not all_moves:  # no moves
+            return True
+        return False
 
     def get_rival_pieces(self, color):
         """
@@ -391,6 +432,17 @@ class Board:
                     ret.append(self.squares[row][col])
         return ret
 
+    def get_king_square(self, color):
+        team_squares = self.get_team_pieces(color)
+        for square in team_squares:
+            if square.piece.name == "king":
+                return square
+
+    def get_move_from_target(self, target):
+        for move in self.possible_moves:
+            if move.target == target:
+                return move
+
     def in_check(self, color):
         """
         color player is in check
@@ -403,78 +455,10 @@ class Board:
                     return True
         return False
 
-    def can_move(self, move):
-        """
-        try a move to see if there is check
-        """
-        ret = True
-
-        # save r/l castle values
-        l_castle = move.l_castle
-        r_castle = move.r_castle
-        move.l_castle, move.r_castle = False, False  # changed in order to make move normally
-                                                     # will be restored later
-        # saving original pieces
-        start_piece = move.start.piece
-        target_piece = move.target.piece
-
-        # copying pieces to perform moves on them
-        tmp_start_piece = copy.deepcopy(start_piece)
-        tmp_target_piece = copy.deepcopy(target_piece)
-
-        # switching to copied pieces
-        move.start.piece = tmp_start_piece
-        move.target.piece = tmp_target_piece
-
-        self.make_move(move)  # making the move
-
-        if self.in_check(start_piece.color):
-            ret = False
-
-        self.make_reverse_move(move)  # un-making the move
-
-        # returning the original pieces to their
-        move.start.piece = start_piece
-        move.target.piece = target_piece
-
-        move.l_castle = l_castle
-        move.r_castle = r_castle
-
-        if r_castle:
-            # need to also check king move one square right
-            target = self.squares[move.start.row][5]  # one step right
-            return ret and self.can_move(Move(move.start, target))
-
-        if l_castle:
-            # need to also check king move one square left
-            target = self.squares[move.start.row][3]  # one step left
-            return ret and self.can_move(Move(move.start, target))
-
-        return ret
-
-    def game_over(self, color):
-        all_moves = []
-        rival_pieces = self.get_rival_pieces(color)
-        for square in rival_pieces:
-            all_moves += self.calc_moves(square.piece, square.row, square.col)
-        # print(all_moves)
-        if not all_moves:  # no moves
-            return True
-        return False
-
-    def get_king_square(self, color):
-        team_squares = self.get_team_pieces(color)
-        for square in team_squares:
-            if square.piece.name == "king":
-                return square
-
     def target_squares(self):
         ret = []
         for move in self.possible_moves:
             ret.append(move.target)
         return ret
 
-    def get_move_from_target(self, target):
-        for move in self.possible_moves:
-            if move.target == target:
-                return move
+
