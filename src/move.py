@@ -13,6 +13,9 @@ class Move:
         s += f' -> ({self.target.col}, {self.target.row})'
         return s
 
+    def __repr__(self):
+        return str(self)
+
     def __eq__(self, other):
         return self.start == other.start and self.target == other.target
 

@@ -38,6 +38,7 @@ class Main:
                 if board.game_over(current_color):
                     if not self.game_over:
                         print(f'{self.colors[not self.white_to_move]} wins!')
+                    gui.draw_game_over(screen)
                     self.game_over = True
                 gui.highlight_king(screen, current_color)
 
@@ -56,6 +57,8 @@ class Main:
                     click_x, click_y = event.pos
                     clicked_row = click_y // SQUARE_SIZE
                     clicked_col = click_x // SQUARE_SIZE
+
+
 
                     # make move
                     if board.squares[clicked_row][clicked_col] in board.target_squares():

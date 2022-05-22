@@ -1,4 +1,5 @@
 import pygame
+import os
 from constants import *
 from board import Board
 
@@ -53,3 +54,21 @@ class GUI:
         rect = (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
         pygame.draw.rect(surface, CHECK_COLOR, rect, 5)
 
+    def draw_game_over(self, surface):
+        path = os.path.join(f'images/checkmate_s.png')
+        image = pygame.image.load(path)
+        center_img = WIDTH // 2, int(0.46 * HEIGHT)
+        img_frame = image.get_rect(center=center_img)
+        surface.blit(image, img_frame)
+
+        # font = pygame.font.Font('freesansbold.ttf', 26)
+        # text = font.render("Press 'r' to restart", True, (0, 0, 0))
+        # center_text = WIDTH // 2, HEIGHT - HEIGHT // 4
+        # frame = text.get_rect(center=center_text)
+        # surface.blit(text, frame)
+
+        path = os.path.join(f'images/restart.png')
+        image = pygame.image.load(path)
+        center_img = WIDTH // 2, HEIGHT - HEIGHT // 4
+        img_frame = image.get_rect(center=center_img)
+        surface.blit(image, img_frame)

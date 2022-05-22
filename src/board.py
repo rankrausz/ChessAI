@@ -400,9 +400,9 @@ class Board:
 
     # =========================== Game, get's & others ===============================
 
-    def game_over(self, color):
+    def game_over(self, rival_color):
         all_moves = []
-        rival_pieces = self.get_rival_pieces(color)
+        rival_pieces = self.get_team_pieces(rival_color)
         for square in rival_pieces:
             all_moves += self.calc_moves(square.piece, square.row, square.col)
         # print(all_moves)
