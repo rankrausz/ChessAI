@@ -2,6 +2,7 @@ import pygame
 from constants import *
 from board import Board
 
+
 class GUI:
 
     def __init__(self, board):
@@ -34,8 +35,6 @@ class GUI:
                 pygame.draw.circle(surface, POSSIBLE_COLOR, center, 24, 6)
             else:
                 pygame.draw.circle(surface, POSSIBLE_COLOR, center, 15)
-
-
 
     def draw_pieces(self, surface):
         for row in range(ROWS):
