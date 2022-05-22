@@ -324,9 +324,10 @@ class Board:
 
     def game_over(self, color):
         all_moves = []
-        rival_pieces = self.get_rival_pieces(color)
+        rival_pieces = self.get_team_pieces(color)
         for square in rival_pieces:
             all_moves += self.calc_moves(square.piece, square.row, square.col)
+        # print(all_moves)
         if not all_moves:  # no moves
             return True
         return False

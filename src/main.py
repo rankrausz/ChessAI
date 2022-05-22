@@ -16,6 +16,8 @@ class Main:
         self.board = Board()
         self.gui = GUI(self.board)  # reference
         self.white_to_move = True
+        self.colors = ["black", "white"]
+        self.game_over = False
 
     def mainloop(self):
 
@@ -23,22 +25,30 @@ class Main:
         gui = self.gui
         screen = self.screen
 
+        print("white's turn")
+
         while True:
             gui.draw_background(screen)
             gui.draw_pieces(screen)
 
-            if board.game_over(self.get_color()):
-                print("game over")
+            current_color = self.colors[self.white_to_move]
 
-            current_color = self.get_color()
             if board.in_check(current_color):
+                if board.game_over(current_color):
+                    if not self.game_over:
+                        print(f'{self.colors[not self.white_to_move]} wins!')
+                    self.game_over = True
                 gui.highlight_king(screen, current_color)
+            elif board.game_over(current_color):
+                if not self.game_over:
+                    print("stalemate")
+                self.game_over = True
 
             # board.
             for event in pygame.event.get():
 
                 # click
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
 
                     # get the row and col of click location
                     click_x, click_y = event.pos
@@ -50,9 +60,12 @@ class Main:
                         piece_moving = board.clicked_square.piece
                         target_square = board.squares[clicked_row][clicked_col]
                         board.make_move(board.clicked_square, target_square)
-                        self.white_to_move = not self.white_to_move
                         board.possible_squares = []
                         board.clicked_square = None
+
+                        self.white_to_move = not self.white_to_move
+
+                        print(f"{self.colors[self.white_to_move]}'s turn")
 
                     # clicked on a piece
                     elif board.squares[clicked_row][clicked_col].has_piece():
@@ -79,7 +92,8 @@ class Main:
                     pygame.quit()
                     sys.exit()  # return
 
-            pygame.display.update()
+            pygame.display.update()  ###
+
 
     def my_turn(self, piece):
         if piece.color == "white" and self.white_to_move:
@@ -88,8 +102,13 @@ class Main:
             return True
         return False
 
-    def get_color(self):
+    def get_curr_color(self):
         if self.white_to_move:
+            return "white"
+        return "black"
+
+    def get_other_color(self):
+        if not self.white_to_move:
             return "white"
         return "black"
 
