@@ -14,18 +14,25 @@ class Main:
         pygame.display.set_caption("Chess")
 
         self.board = Board()
-        self.game = GUI(self.board)  # reference
+        self.gui = GUI(self.board)  # reference
         self.white_to_move = True
 
     def mainloop(self):
 
         board = self.board
-        game = self.game
+        gui = self.gui
         screen = self.screen
 
         while True:
-            game.draw_background(screen)
-            game.draw_pieces(screen)
+            gui.draw_background(screen)
+            gui.draw_pieces(screen)
+
+            if board.game_over(self.get_color()):
+                print("game over")
+
+            current_color = self.get_color()
+            if board.in_check(current_color):
+                gui.highlight_king(screen, current_color)
 
             # board.
             for event in pygame.event.get():
@@ -42,7 +49,7 @@ class Main:
                     if board.squares[clicked_row][clicked_col] in board.possible_squares:
                         piece_moving = board.clicked_square.piece
                         target_square = board.squares[clicked_row][clicked_col]
-                        board.make_move(piece_moving, target_square)
+                        board.make_move(board.clicked_square, target_square)
                         self.white_to_move = not self.white_to_move
                         board.possible_squares = []
                         board.clicked_square = None
@@ -62,6 +69,10 @@ class Main:
                                 possible_square = board.squares[row][col]
                                 board.possible_squares.append(possible_square)
 
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        restart = Main()
+                        restart.mainloop()
 
                 # quit
                 elif event.type == pygame.QUIT:
@@ -76,6 +87,12 @@ class Main:
         if piece.color == "black" and not self.white_to_move:
             return True
         return False
+
+    def get_color(self):
+        if self.white_to_move:
+            return "white"
+        return "black"
+
 
 if __name__ == "__main__":
     main = Main()

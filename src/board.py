@@ -1,7 +1,7 @@
 from constants import *
 from square import Square
 from piece import *
-
+import copy
 
 class Board:
 
@@ -41,6 +41,7 @@ class Board:
         """
         pawn_row, other_row = (6, 7) if color == "white" else (1, 0)
 
+        # self.squares[3][4].change_piece(King("white"))
         # self.squares[3][4].change_piece(King("white"))
 
         # pawns
@@ -83,11 +84,12 @@ class Board:
         self.squares[other_row][4].change_piece(king)
         self.add_to_player_pieces(color, king)
 
-    def make_move(self, piece, target):
+    def make_move(self, start, target):
         """
-        move piece to target square
+        move piece from start to target square
         """
-        self.clicked_square.change_piece(None)
+        piece = start.piece
+        start.change_piece(None)
         target.change_piece(piece)
         piece.moved = True
 
@@ -142,6 +144,8 @@ class Board:
                 if not self.squares[move_row][move_col].has_piece():
                     ret.append((move_row, move_col))
 
+
+
         return ret
 
     def line_moves(self, piece, row, col):
@@ -188,6 +192,34 @@ class Board:
                 ret.append((row + i, col + j))
         return ret
 
+    def calc_moves(self, piece, row, col):
+        """
+        calculate all possible moves for a piece in a specific location (row, col)
+        :return a list of locations (row, col) representing possible new location
+        """
+        moves = []
+        if piece.name == "pawn":
+            moves = self.pawn_moves(piece, row, col)
+
+        elif piece.name == "knight":
+            moves = self.knight_moves(piece, row, col)
+
+        elif piece.name == "king":
+            moves = self.king_moves(piece, row, col)
+
+        # bishop, rook or queen
+        else:
+            moves = self.line_moves(piece, row, col)
+
+        ret = []
+        start = self.squares[row][col]
+        for r, c in moves:
+            target = self.squares[r][c]
+            if self.can_move(start, target):
+                ret.append((r, c))
+
+        return ret
+
     def king_sees(self, row, col):
         ret = []
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
@@ -195,24 +227,6 @@ class Board:
             if Square.in_range(row+i, col+j):
                 ret.append((row+i, col+j))
         return ret
-
-    def calc_moves(self, piece, row, col):
-        """
-        calculate all possible moves for a piece in a specific location (row, col)
-        :return a list of locations (row, col) representing possible new location
-        """
-        if piece.name == "pawn":
-            return self.pawn_moves(piece, row, col)
-
-        elif piece.name == "knight":
-            return self.knight_moves(piece, row, col)
-
-        elif piece.name == "king":
-            return self.king_moves(piece, row, col)
-
-        # bishop, rook or queen
-        else:
-            return self.line_moves(piece, row, col)
 
     def calc_sees(self, piece, row, col):
         """
@@ -238,12 +252,87 @@ class Board:
             return self.line_moves(piece, row, col)
 
     def rival_sees(self, color):
+        """
+        returns coordinates list of squares rival sees
+        """
+        # color is the colo of the player (not rival)
         ret = []
-        if color == "black":
-            for piece in self.white_pieces:
-                ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])  # prettier
-        else:
-            for piece in self.black_pieces:
-                ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])
+        piece_squares = self.get_rival_pieces(color)
+        for square in piece_squares:
+            ret += self.calc_sees(square.piece, square.row, square.col)
+        # if color == "black":
+        #     for piece in self.white_pieces:
+        #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])  # prettier
+        # else:
+        #     for piece in self.black_pieces:
+        #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])
         return ret
 
+    def get_rival_pieces(self, color):
+        """
+        returns list of all squares containing pieces that doesn't belong to 'color'
+        """
+        ret = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.squares[row][col].has_rival_piece(color):
+                    ret.append(self.squares[row][col])
+        return ret
+
+    def get_team_pieces(self, color):
+        """
+        returns list of all squares containing pieces that belong to 'color'
+        """
+        ret = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.squares[row][col].has_team_piece(color):
+                    ret.append(self.squares[row][col])
+        return ret
+
+    def in_check(self, color):
+        """
+        color player is in check
+        """
+        rival_sees = self.rival_sees(color)
+        for row, col in rival_sees:
+            if self.squares[row][col].has_team_piece(color):
+                if self.squares[row][col].piece.name == "king":
+                    return True
+        return False
+
+    def can_move(self, start, target):
+        """
+        try a move to see if there is check
+        """
+        start_piece = start.piece
+        target_piece = target.piece
+        tmp_start_piece = copy.deepcopy(start_piece)
+        tmp_target_piece = copy.deepcopy(target_piece)
+        start.piece = tmp_start_piece
+        target.piece = tmp_target_piece
+        ret = True
+
+        self.make_move(start, target)
+        if self.in_check(target.piece.color):
+            ret = False
+
+        self.make_move(target, start)
+        start.piece = start_piece
+        target.piece = target_piece
+        return ret
+
+    def game_over(self, color):
+        all_moves = []
+        rival_pieces = self.get_rival_pieces(color)
+        for square in rival_pieces:
+            all_moves += self.calc_moves(square.piece, square.row, square.col)
+        if not all_moves:  # no moves
+            return True
+        return False
+
+    def get_king_square(self, color):
+        team_squares = self.get_team_pieces(color)
+        for square in team_squares:
+            if square.piece.name == "king":
+                return square

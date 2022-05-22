@@ -7,6 +7,8 @@ class GUI:
     def __init__(self, board):
         self.board = board
         self.squares = self.board.squares
+        self.white_check = False
+        self.black_check = False
 
     def draw_background(self, surface):
 
@@ -33,6 +35,8 @@ class GUI:
             else:
                 pygame.draw.circle(surface, POSSIBLE_COLOR, center, 15)
 
+
+
     def draw_pieces(self, surface):
         for row in range(ROWS):
             for col in range(COLS):
@@ -43,4 +47,10 @@ class GUI:
                     center_img = col*SQUARE_SIZE + SQUARE_SIZE//2, row*SQUARE_SIZE + SQUARE_SIZE//2  # understand
                     piece.img_frame = image.get_rect(center=center_img)
                     surface.blit(image, piece.img_frame)  # understand
+
+    def highlight_king(self, surface, color):
+        king_square = self.board.get_king_square(color)
+        row, col = king_square.row, king_square.col
+        rect = (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+        pygame.draw.rect(surface, CHECK_COLOR, rect, 5)
 
