@@ -4,6 +4,7 @@ import sys
 from constants import *
 from gui import GUI
 from board import Board
+from move import Move
 
 
 class Main:
@@ -39,6 +40,7 @@ class Main:
                         print(f'{self.colors[not self.white_to_move]} wins!')
                     self.game_over = True
                 gui.highlight_king(screen, current_color)
+
             elif board.game_over(current_color):
                 if not self.game_over:
                     print("stalemate")
@@ -56,31 +58,33 @@ class Main:
                     clicked_col = click_x // SQUARE_SIZE
 
                     # make move
-                    if board.squares[clicked_row][clicked_col] in board.possible_squares:
-                        piece_moving = board.clicked_square.piece
+                    if board.squares[clicked_row][clicked_col] in board.target_squares():
                         target_square = board.squares[clicked_row][clicked_col]
-                        board.make_move(board.clicked_square, target_square)
-                        board.possible_squares = []
+                        # get move
+                        move = board.get_move_from_target(target_square)
+                        board.make_move(move)
+                        board.possible_moves = []
                         board.clicked_square = None
 
                         self.white_to_move = not self.white_to_move
 
-                        print(f"{self.colors[self.white_to_move]}'s turn")
+                        # print(f"{self.colors[self.white_to_move]}'s turn")
 
                     # clicked on a piece
-                    elif board.squares[clicked_row][clicked_col].has_piece():
+                    elif board.squares[clicked_row][clicked_col].has_team_piece(current_color):
                         square = board.squares[clicked_row][clicked_col]
                         piece = square.piece
-                        board.possible_squares = []
+                        # board.possible_squares = []
+                        board.possible_moves = []
                         if square == board.clicked_square:
                             # unclick
                             board.clicked_square = None
-                        elif self.my_turn(piece):
+                        else:
                             board.clicked_square = square
-                            possible_moves = board.calc_moves(piece, clicked_row, clicked_col)
-                            for row, col in possible_moves:
-                                possible_square = board.squares[row][col]
-                                board.possible_squares.append(possible_square)
+                            board.possible_moves = board.calc_moves(piece, clicked_row, clicked_col)
+                            # for move in possible_moves:
+                            #     possible_square = move.target
+                            #     board.possible_squares.append(possible_square)
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
@@ -93,7 +97,6 @@ class Main:
                     sys.exit()  # return
 
             pygame.display.update()  ###
-
 
     def my_turn(self, piece):
         if piece.color == "white" and self.white_to_move:

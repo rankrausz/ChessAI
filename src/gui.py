@@ -27,7 +27,7 @@ class GUI:
             pygame.draw.rect(surface, SELECTED_COLOR, rect, 5)
 
         # drawing circle if this square is a move option
-        for square in self.board.possible_squares:
+        for square in self.board.target_squares():
             row, col = square.row, square.col
             center = (col * SQUARE_SIZE + SQUARE_SIZE // 2,
                       row * SQUARE_SIZE + SQUARE_SIZE // 2)

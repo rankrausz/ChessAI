@@ -40,6 +40,16 @@ class Pawn(Piece):
 
 class Knight(Piece):
     VALUE = 3.0
+    DIRECTIONS = [
+        (2, 1),
+        (2, -1),
+        (1, 2),
+        (1, -2),
+        (-1, 2),
+        (-1, -2),
+        (-2, 1),
+        (-2, -1)
+    ]
 
     def __init__(self, color):
         super().__init__("knight", color, Knight.VALUE, INIT_POS)
@@ -47,6 +57,12 @@ class Knight(Piece):
 
 class Bishop(Piece):
     VALUE = 3.001
+    DIRECTIONS = [
+        (1, 1),
+        (1, -1),
+        (-1, 1),
+        (-1, -1)
+    ]
 
     def __init__(self, color):
         super().__init__("bishop", color, Bishop.VALUE, INIT_POS)
@@ -54,6 +70,12 @@ class Bishop(Piece):
 
 class Rook(Piece):
     VALUE = 5.0
+    DIRECTIONS = [
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1)
+    ]
 
     def __init__(self, color):
         super().__init__("rook", color, Rook.VALUE, INIT_POS)
@@ -61,6 +83,7 @@ class Rook(Piece):
 
 class Queen(Piece):
     VALUE = 9.0
+    DIRECTIONS = Bishop.DIRECTIONS + Rook.DIRECTIONS
 
     def __init__(self, color):
         super().__init__("queen", color, Queen.VALUE, INIT_POS)
@@ -68,6 +91,7 @@ class Queen(Piece):
 
 class King(Piece):
     VALUE = 3.0
+    DIRECTIONS = Queen.DIRECTIONS
 
     def __init__(self, color):
         super().__init__("king", color, 100000.0, INIT_POS)

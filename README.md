@@ -8,7 +8,6 @@ To run the game, make sure your working directory is ChessAI and run main.py.
 press r to restart the game.
 
 Missing features:
-- castling
 - en passant
 
 Future features:
