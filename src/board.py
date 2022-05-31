@@ -69,7 +69,7 @@ class Board:
 
     # ============================= Moving methods =============================
 
-    def make_move(self, move):
+    def make_move(self, move, update_moved=False):
         """
         move piece from start to target square
         """
@@ -77,7 +77,7 @@ class Board:
         piece = move.start.piece
         move.start.change_piece(None)
         move.target.change_piece(piece)
-        piece.moved = True
+        piece.moved = piece.moved or update_moved
 
         if move.is_castling():
             # also move rook
@@ -89,7 +89,7 @@ class Board:
 
         self.promote(move.target)
 
-    def undo_move(self, move):
+    def undo_move(self, move, update_moved=False):
         move.start.piece = move.s_piece
         move.target.piece = move.t_piece
 
@@ -143,47 +143,14 @@ class Board:
         try a move to see if there is check
         """
         ret = True
-        # save r/l castle values
-        l_castle = move.l_castle
-        r_castle = move.r_castle
-        move.l_castle, move.r_castle = False, False  # changed in order to make move normally
-        # will be restored later
-        # saving original pieces
-        start_piece = move.start.piece
-        target_piece = move.target.piece
 
-        # copying pieces to perform moves on them
-        tmp_start_piece = copy.deepcopy(start_piece)
-        tmp_target_piece = copy.deepcopy(target_piece)
-
-        # switching to copied pieces
-        move.start.piece = tmp_start_piece
-        move.target.piece = tmp_target_piece
-
+        color = move.start.piece.color
         self.make_move(move)  # making the move
 
-        if self.in_check(start_piece.color):
+        if self.in_check(color):
             ret = False
 
         self.undo_move(move)  # un-making the move
-
-        # returning the original pieces to their
-        move.start.piece = start_piece
-        move.target.piece = target_piece
-
-        move.l_castle = l_castle
-        move.r_castle = r_castle
-
-        if r_castle:
-            # need to also check king move one square right
-            target = self.squares[move.start.row][5]  # one step right
-            return ret and self.can_move(Move(move.start, target))
-
-        if l_castle:
-            # need to also check king move one square left
-            target = self.squares[move.start.row][3]  # one step left
-            return ret and self.can_move(Move(move.start, target))
-
         return ret
 
     def calc_moves(self, piece, row, col):

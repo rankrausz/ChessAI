@@ -30,22 +30,22 @@ class Main:
     def opening_screen(self):
         screen = self.screen
         while True:
-            bg = pygame.image.load("images/bg.png")
+            bg = pygame.image.load("images/gui/bg.png")
             bg_rect = bg.get_rect(center=(WIDTH // 2, HEIGHT // 2))
             screen.blit(bg, bg_rect)
 
             menu_mouse_pos = pygame.mouse.get_pos()
 
-            header = pygame.image.load("images/header.png")
+            header = pygame.image.load("images/gui/header.png")
             header_rect = header.get_rect(center=(WIDTH // 2, int(0.2*HEIGHT)))
             screen.blit(header, header_rect)
 
-            play_ai = Button(image=pygame.image.load("images/play_ai.png"),
-                             hovered_img=pygame.image.load("images/play_ai_p.png"),
+            play_ai = Button(image=pygame.image.load("images/gui/play_ai.png"),
+                             hovered_img=pygame.image.load("images/gui/play_ai_p.png"),
                              pos=(HEIGHT // 2, int(0.45*WIDTH)))
 
-            play_friend = Button(image=pygame.image.load("images/play_f.png"),
-                                 hovered_img=pygame.image.load("images/play_f_p.png"),
+            play_friend = Button(image=pygame.image.load("images/gui/play_f.png"),
+                                 hovered_img=pygame.image.load("images/gui//play_f_p.png"),
                                  pos=(HEIGHT // 2, int(0.65*WIDTH)))
 
             for button in [play_ai, play_friend]:
@@ -97,7 +97,7 @@ class Main:
                     board.make_move(move)
                     score = AI.minimax(board, depth, -AI.INFINITI, AI.INFINITI, True)
                     # score = AI.negamax(board, depth, -AI.INFINITI, AI.INFINITI, True)
-                    board.undo_move(move)
+                    board.undo_move(move, True)
                     if score < best_score:
                         best_score = score
                         best_move = move
@@ -105,7 +105,7 @@ class Main:
                 board.make_move(best_move)
                 self.moves.append(best_move)
                 ai_line = random.choice(AI_LINES)
-                print(f'Position evaluated: {AI.COUNT}\n{ai_line}\n')
+                print(f'Positions evaluated: {AI.COUNT}\n{ai_line}\n')
                 AI.COUNT = 0
                 self.white_to_move = not self.white_to_move
 
@@ -125,7 +125,7 @@ class Main:
                             target_square = board.squares[clicked_row][clicked_col]
                             # get move
                             move = board.get_move_from_target(target_square)
-                            board.make_move(move)
+                            board.make_move(move, True)
                             self.moves.append(move)
 
                             # restart clicked square and possible moves

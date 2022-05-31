@@ -23,4 +23,4 @@ EVAL_SIGN = {"white": 1, "black": -1}
 AI_LINES = ["Beat that!", "In your face!", "You're going down...", "Didn't see that coming?",
             "It's never too late to resign", "easy", "you're so predicted",
             "who gave you a chess license?", "What's your number?", "Think you're a man?",
-            "I love you, but you're gonna lose", "that's a SAHI move"]
+            "I love you, but you're gonna lose", "that's a SAHI move", "that's tough"]
