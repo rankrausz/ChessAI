@@ -1,5 +1,6 @@
 # Chess AI
 A chess game with GUI made with python & pygame.
+
 AI mode uses minimax algorithm with alpha-beta optimiziation.
 
 
