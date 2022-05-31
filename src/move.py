@@ -9,8 +9,8 @@ class Move:
 
     def __str__(self):
         s = ''
-        s += f'({self.start.col}, {self.start.row})'
-        s += f' -> ({self.target.col}, {self.target.row})'
+        s += f'({self.start.row}, {self.start.col})'
+        s += f' -> ({self.target.row}, {self.target.col})'
         return s
 
     def __repr__(self):
@@ -22,4 +22,3 @@ class Move:
     def is_castling(self):
         return self.l_castle or self.r_castle
 
-    # def get_rook_move(self):

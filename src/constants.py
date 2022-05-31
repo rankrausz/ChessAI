@@ -13,8 +13,10 @@ L_BROWN = (240, 208, 187)
 
 # Color choice
 COLORS = (L_BROWN, BROWN)  # [light, dark]
-CHECK_COLOR = (207, 0, 0) # red
+CHECK_COLOR = (207, 0, 0)  # red
 SELECTED_COLOR = DARK_GREEN
 POSSIBLE_COLOR = (154, 156, 148)  # grey-ish
 
 INIT_POS = (-1, -1)
+
+EVAL_SIGN = {"white": 1, "black": -1}

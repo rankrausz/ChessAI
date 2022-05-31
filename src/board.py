@@ -272,7 +272,8 @@ class Board:
         if not pawn.moved:
             move_row, move_col = row + 2 * updown, col
             if Square.in_range(move_row, move_col):
-                if not self.squares[move_row][move_col].has_piece():
+                if not self.squares[move_row][move_col].has_piece() and \
+                        not self.squares[move_row - updown][move_col].has_piece():
                     target = self.squares[move_row][move_col]
                     ret.append(Move(start, target))
         return ret
@@ -341,6 +342,15 @@ class Board:
                 ret.append(castle)
         return ret
 
+    def all_moves(self, color):
+        """
+        calculate all possible moves of player color
+        """
+        ret = []
+        for square in self.get_team_pieces(color):
+            ret += self.calc_moves(square.piece, square.row, square.col)
+        return ret
+
     # ============================= Calculating sees ===============================
 
     def calc_sees(self, piece, row, col):
@@ -398,7 +408,7 @@ class Board:
         #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])
         return ret
 
-    # =========================== Game, get's & others ===============================
+    # =========================== Game, gets & others ===============================
 
     def game_over(self, rival_color):
         all_moves = []
@@ -460,5 +470,14 @@ class Board:
         for move in self.possible_moves:
             ret.append(move.target)
         return ret
+
+    def clone(self):
+        cloned = Board()
+        cloned._create()
+        all_pieces = self.get_team_pieces('white') + self.get_team_pieces('black')
+        for square in all_pieces:
+            row, col = square.row, square.col
+            cloned.squares[row][col].piece = copy.deepcopy(square.piece)
+        return cloned
 
 
