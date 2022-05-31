@@ -1,7 +1,7 @@
 # Chess AI
-A chess with GUI made with python & pygame.
+A chess game with GUI made with python & pygame.
+AI mode uses minimax algorithm with alpha-beta optimiziation.
 
-**Only player vs. player mode available currently**, play vs. AI mode in progress!!!
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/103533203/169710341-fd54f2cd-38da-4a8e-95c3-7afd65e60247.gif" width="400" alt="animated" />
