@@ -33,8 +33,6 @@ class Board:
         """
         pawn_row, other_row = (6, 7) if color == "white" else (1, 0)
 
-        # self.squares[3][4].change_piece(King("white"))
-
         # pawns
         for col in range(COLS):
             pawn = Pawn(color)
@@ -69,14 +67,82 @@ class Board:
         king.pos = (other_row, 4)
         self.squares[other_row][4].change_piece(king)
 
-    # ============================= Moving Functions =============================
+    # ============================= Moving methods =============================
+
+    def make_move(self, move):
+        """
+        move piece from start to target square
+        """
+
+        piece = move.start.piece
+        move.start.change_piece(None)
+        move.target.change_piece(piece)
+        piece.moved = True
+
+        if move.is_castling():
+            # also move rook
+            castle = move.rook_move
+            rook = castle.start.piece
+            castle.start.change_piece(None)
+            castle.target.change_piece(rook)
+            rook.moved = True
+
+        self.promote(move.target)
+
+    def undo_move(self, move):
+        move.start.piece = move.s_piece
+        move.target.piece = move.t_piece
+
+        if move.is_castling():
+            move.rook_move.start.piece = move.rook_move.s_piece
+            move.rook_move.target.piece = move.rook_move.t_piece
+
+    def promote(self, piece_square):
+        if piece_square.piece.color == 'white':
+            if isinstance(piece_square.piece, Pawn) and piece_square.row == 0:
+                piece_square.piece = Queen('white')
+        else:
+            if isinstance(piece_square.piece, Pawn) and piece_square.row == 7:
+                piece_square.piece = Queen('black')
+
+    def can_castle(self, color):
+        """
+        :returns list of 2 bools, [can_castle_left_side, can_castle_right_side]
+        """
+        can_castle_left_side, can_castle_right_side = False, False
+
+        king_square = self.get_king_square(color)
+        row = king_square.row
+        col = king_square.col
+
+        if king_square.piece.moved or self.in_check(color):
+            return [False, False]
+
+        right_rook = self.squares[row][7].piece
+        if right_rook:
+            if right_rook.name == "rook" and not right_rook.moved \
+                                         and not self.squares[row][col + 1].piece \
+                                         and not self.squares[row][col + 2].piece:
+                # these are the conditions for castling
+                can_castle_right_side = True
+
+        left_rook = self.squares[row][0].piece
+        if left_rook:
+            if left_rook.name == "rook" and not left_rook.moved \
+                    and not self.squares[row][col - 1].piece \
+                    and not self.squares[row][col - 2].piece \
+                    and not self.squares[row][col - 3].piece:
+                can_castle_left_side = True
+
+        return [can_castle_left_side, can_castle_right_side]
+
+    # ========================= Calculating possible moves ========================
 
     def can_move(self, move):
         """
         try a move to see if there is check
         """
         ret = True
-
         # save r/l castle values
         l_castle = move.l_castle
         r_castle = move.r_castle
@@ -99,7 +165,7 @@ class Board:
         if self.in_check(start_piece.color):
             ret = False
 
-        self.make_reverse_move(move)  # un-making the move
+        self.undo_move(move)  # un-making the move
 
         # returning the original pieces to their
         move.start.piece = start_piece
@@ -119,89 +185,6 @@ class Board:
             return ret and self.can_move(Move(move.start, target))
 
         return ret
-
-    def make_move(self, move):
-        """
-        move piece from start to target square
-        """
-        if move.l_castle:
-            # move king
-            only_king_move = Move(move.start, move.target)
-            self.make_move(only_king_move)
-
-            # move rook
-            rook_square = self.squares[move.start.row][0]
-            rook_final = self.squares[move.start.row][3]
-            self.make_move(Move(rook_square, rook_final))
-            return
-
-        if move.r_castle:
-            # move king
-            only_king_move = Move(move.start, move.target)
-            self.make_move(only_king_move)
-
-            # move rook
-            rook_square = self.squares[move.start.row][7]
-            rook_final = self.squares[move.start.row][5]
-            self.make_move(Move(rook_square, rook_final))
-            return
-
-        piece = move.start.piece
-        move.start.change_piece(None)
-        move.target.change_piece(piece)
-        piece.moved = True
-
-    def make_reverse_move(self, move):
-        start = move.target
-        target = move.start
-        self.make_move(Move(start, target))
-
-        if move.r_castle:  # return the right rook
-            # move is king(row, 4) -> (row, 6)
-            # rook in (row, 5) needs to get back to (row, 7)
-            row = move.start.row
-            start = self.squares[row][5]
-            target = self.squares[row][7]
-            self.make_move(Move(start, target))
-
-        if move.r_castle:  # return the left rook
-            # rook in (row, 3) needs to get back to (row, 0)
-            row = move.start.row
-            start = self.squares[row][3]
-            target = self.squares[row][0]
-            self.make_move(Move(start, target))
-
-    def can_castle(self, color):
-        """
-        :returns list of 2 bools, [can_castle_left_side, can_castle_right_side]
-        """
-        can_castle_left_side, can_castle_right_side = False, False
-        king_square = self.get_king_square(color)
-        row = king_square.row
-        col = king_square.col
-
-        if king_square.piece.moved:
-            return [False, False]
-
-        right_rook = self.squares[row][7].piece
-        if right_rook:
-            if right_rook.name == "rook" and not right_rook.moved \
-                                         and not self.squares[row][col + 1].piece \
-                                         and not self.squares[row][col + 2].piece:
-                # these are the conditions for castling
-                can_castle_right_side = True
-
-        left_rook = self.squares[row][0].piece
-        if left_rook:
-            if left_rook.name == "rook" and not left_rook.moved \
-                    and not self.squares[row][col - 1].piece \
-                    and not self.squares[row][col - 2].piece \
-                    and not self.squares[row][col - 3].piece:
-                can_castle_left_side = True
-
-        return [can_castle_left_side, can_castle_right_side]
-
-    # ========================= Calculating possible moves ========================
 
     def calc_moves(self, piece, row, col):
         """
@@ -282,12 +265,6 @@ class Board:
         ret = []
         start = self.squares[row][col]
         directions = piece.DIRECTIONS
-        #
-        # start, end = 0, 8
-        # if piece.name == "rook":  # only straight
-        #     start, end = 0, 4
-        # elif piece.name == "bishop":  # only diagonal
-        #     start, end = 4, 8
 
         def valid_move(r, c):
             # check if next move is valid
@@ -334,11 +311,13 @@ class Board:
                 target = self.squares[row][col - 2]
                 castle = Move(start, target)
                 castle.l_castle = True
+                castle.rook_move = Move(self.squares[row][0], self.squares[row][3])
                 ret.append(castle)
             if can_castle[1]:  # right (short) castle
                 target = self.squares[row][col + 2]
                 castle = Move(start, target)
                 castle.r_castle = True
+                castle.rook_move = Move(self.squares[row][7], self.squares[row][5])
                 ret.append(castle)
         return ret
 
@@ -400,12 +379,7 @@ class Board:
         piece_squares = self.get_rival_pieces(color)
         for square in piece_squares:
             ret += self.calc_sees(square.piece, square.row, square.col)
-        # if color == "black":
-        #     for piece in self.white_pieces:
-        #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])  # prettier
-        # else:
-        #     for piece in self.black_pieces:
-        #         ret += self.calc_sees(piece, piece.pos[0], piece.pos[1])
+
         return ret
 
     # =========================== Game, gets & others ===============================

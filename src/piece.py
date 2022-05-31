@@ -69,7 +69,6 @@ class Knight(Piece):
                             [-40,-20,  0,  5,  5,  0,-20,-40],
                             [-50,-40,-30,-30,-30,-30,-40,-50]])
 
-
     def __init__(self, color):
         super().__init__("knight", color, Knight.VALUE, INIT_POS)
 

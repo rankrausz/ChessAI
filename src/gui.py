@@ -52,12 +52,9 @@ class GUI:
                 if self.board.squares[row][col].has_piece():
                     piece = self.board.squares[row][col].piece
                     image = pygame.image.load(piece.image_path)
-                    center_img = col*SQUARE_SIZE + SQUARE_SIZE//2, row*SQUARE_SIZE + SQUARE_SIZE//2  # understand
+                    center_img = col*SQUARE_SIZE + SQUARE_SIZE//2, row*SQUARE_SIZE + SQUARE_SIZE//2
                     piece.img_frame = image.get_rect(center=center_img)
                     surface.blit(image, piece.img_frame)
-
-    # def highlight_king(self, surface, color):
-
 
     @staticmethod
     def draw_game_over(surface):
