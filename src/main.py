@@ -39,11 +39,11 @@ class Main:
 
             rankrausz = pygame.image.load("assets/rankrausz.png")
 
-            play_ai = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(HEIGHT // 2, 3 * WIDTH // 8),
+            play_ai = Button(image=pygame.image.load("images/rect1.png"), pos=(HEIGHT // 2, 3 * WIDTH // 8),
                                  text_input="Play vs. AI", font=font, base_color="#d7fcd4",
                                  hovering_color=CHECK_COLOR)
 
-            play_friend = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(HEIGHT // 2, 5 * WIDTH // 8),
+            play_friend = Button(image=pygame.image.load("images/rect2.png"), pos=(HEIGHT // 2, 5 * WIDTH // 8),
                                  text_input="Play vs. friend", font=font, base_color="#d7fcd4",
                                  hovering_color=CHECK_COLOR)
 
