@@ -13,8 +13,9 @@ class Board:
         self.possible_moves = []
 
         self._create()
-        self._add_pieces("white")
-        self._add_pieces("black")
+        self._add_pieces_fen(START_FEN)
+        # self._add_pieces("white")
+        # self._add_pieces("black")
 
     def _create(self):  # private methods
         """
@@ -67,6 +68,37 @@ class Board:
         king.pos = (other_row, 4)
         self.squares[other_row][4].change_piece(king)
 
+    def _add_pieces_fen(self, fen: str):
+        squares = self.squares
+        colors = ['white', 'black']
+        row, col = 0, 0
+        for char in fen:
+            if char.isdigit():
+                col += int(char)
+            elif char == '/':
+                row += 1
+                col = 0
+            else:
+                color = colors[char.islower()]
+                char = char.lower()
+                if char == 'p':
+                    squares[row][col].piece = Pawn(color)
+                elif char == 'b':
+                    squares[row][col].piece = Bishop(color)
+                elif char == 'n':
+                    squares[row][col].piece = Knight(color)
+                elif char == 'r':
+                    squares[row][col].piece = Rook(color)
+                elif char == 'q':
+                    squares[row][col].piece = Queen(color)
+                elif char == 'k':
+                    squares[row][col].piece = King(color)
+                else:
+                    squares[row][col].piece = None
+                col += 1
+
+
+
     # ============================= Moving methods =============================
 
     def make_move(self, move, update_moved=False):
@@ -94,8 +126,10 @@ class Board:
         move.target.piece = move.t_piece
 
         if move.is_castling():
-            move.rook_move.start.piece = move.rook_move.s_piece
-            move.rook_move.target.piece = move.rook_move.t_piece
+            # move rook back
+            move.rook_move.start.piece = move.rook_move.target.piece
+            move.rook_move.start.piece.moved = False
+            move.rook_move.target.piece = None
 
     def promote(self, piece_square):
         if piece_square.piece.color == 'white':
