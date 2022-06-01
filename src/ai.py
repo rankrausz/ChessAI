@@ -5,7 +5,6 @@ from move import Move
 
 # from piece import Piece
 # from square import Square
-import copy
 
 
 class AI:

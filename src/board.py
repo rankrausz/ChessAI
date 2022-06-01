@@ -13,8 +13,9 @@ class Board:
         self.possible_moves = []
 
         self._create()
-        self._add_pieces("white")
-        self._add_pieces("black")
+        self._add_pieces_fen(START_FEN)
+        # self._add_pieces("white")
+        # self._add_pieces("black")
 
     def _create(self):  # private methods
         """
@@ -67,6 +68,33 @@ class Board:
         king.pos = (other_row, 4)
         self.squares[other_row][4].change_piece(king)
 
+    def _add_pieces_fen(self, fen: str):
+        squares = self.squares
+        colors = ['white', 'black']
+        row, col = 0, 0
+        for char in fen:
+            if char.isdigit():
+                col += int(char)
+            elif char == '/':
+                row += 1
+                col = 0
+            else:
+                color = colors[char.islower()]
+                char = char.lower()
+                if char == 'p':
+                    squares[row][col].change_piece(Pawn(color))
+                elif char == 'b':
+                    squares[row][col].change_piece(Bishop(color))
+                elif char == 'n':
+                    squares[row][col].change_piece(Knight(color))
+                elif char == 'r':
+                    squares[row][col].change_piece(Rook(color))
+                elif char == 'q':
+                    squares[row][col].change_piece(Queen(color))
+                elif char == 'k':
+                    squares[row][col].change_piece(King(color))
+                col += 1
+
     # ============================= Moving methods =============================
 
     def make_move(self, move, update_moved=False):
@@ -89,13 +117,15 @@ class Board:
 
         self.promote(move.target)
 
-    def undo_move(self, move, update_moved=False):
+    def undo_move(self, move):
         move.start.piece = move.s_piece
         move.target.piece = move.t_piece
 
         if move.is_castling():
-            move.rook_move.start.piece = move.rook_move.s_piece
-            move.rook_move.target.piece = move.rook_move.t_piece
+            # move rook back
+            move.rook_move.start.piece = move.rook_move.target.piece
+            move.rook_move.start.piece.moved = False
+            move.rook_move.target.piece = None
 
     def promote(self, piece_square):
         if piece_square.piece.color == 'white':
@@ -104,6 +134,8 @@ class Board:
         else:
             if isinstance(piece_square.piece, Pawn) and piece_square.row == 7:
                 piece_square.piece = Queen('black')
+
+    # ========================= Calculating possible moves ========================
 
     def can_castle(self, color):
         """
@@ -136,8 +168,6 @@ class Board:
 
         return [can_castle_left_side, can_castle_right_side]
 
-    # ========================= Calculating possible moves ========================
-
     def can_move(self, move):
         """
         try a move to see if there is check
@@ -153,24 +183,26 @@ class Board:
         self.undo_move(move)  # un-making the move
         return ret
 
-    def calc_moves(self, piece, row, col):
+    def calc_moves(self, piece_square):
         """
         calculate all possible moves for a piece in a specific location (row, col)
         :return a list of locations (row, col) representing possible new location
         """
+        piece = piece_square.piece
+        row, col = piece_square.row, piece_square.col
         moves = []
         if piece.name == "pawn":
-            moves = self.pawn_moves(piece, row, col)
+            moves = self.pawn_moves(piece_square)
 
         elif piece.name == "knight":
-            moves = self.knight_moves(piece, row, col)
+            moves = self.knight_moves(piece_square)
 
         elif piece.name == "king":
-            moves = self.king_moves(piece, row, col)
+            moves = self.king_moves(piece_square)
 
         # bishop, rook or queen
         else:
-            moves = self.line_moves(piece, row, col)
+            moves = self.line_moves(piece_square)
 
         ret = []
         # start = self.squares[row][col]
@@ -180,7 +212,9 @@ class Board:
 
         return ret
 
-    def knight_moves(self, knight, row, col):
+    def knight_moves(self, piece_square):
+        knight = piece_square.piece
+        row, col = piece_square.row, piece_square.col
         directions = knight.DIRECTIONS  # all knight moves
         start = self.squares[row][col]  # starting square of the knight
         ret = []
@@ -197,7 +231,9 @@ class Board:
                     ret.append(Move(start, target))
         return ret
 
-    def pawn_moves(self, pawn, row, col):
+    def pawn_moves(self, piece_square):
+        pawn = piece_square.piece
+        row, col = piece_square.row, piece_square.col
         start = self.squares[row][col]
         updown = pawn.direction  # 1 for black, -1 for white
         ret = []
@@ -228,7 +264,9 @@ class Board:
                     ret.append(Move(start, target))
         return ret
 
-    def line_moves(self, piece, row, col):
+    def line_moves(self, piece_square):
+        piece = piece_square.piece
+        row, col = piece_square.row, piece_square.col
         ret = []
         start = self.squares[row][col]
         directions = piece.DIRECTIONS
@@ -252,7 +290,9 @@ class Board:
                 move_col += add_to_col
         return ret
 
-    def king_moves(self, piece, row, col):
+    def king_moves(self, piece_square):
+        piece = piece_square.piece
+        row, col = piece_square.row, piece_square.col
         directions = King.DIRECTIONS
         start = self.squares[row][col]
         ret = []
@@ -294,16 +334,19 @@ class Board:
         """
         ret = []
         for square in self.get_team_pieces(color):
-            ret += self.calc_moves(square.piece, square.row, square.col)
+            ret += self.calc_moves(square)
         return ret
 
     # ============================= Calculating sees ===============================
 
-    def calc_sees(self, piece, row, col):
+    def calc_sees(self, piece_square):
         """
         calculate what squares a piece sees
         """
         ret = []
+        piece = piece_square.piece
+        row, col = piece_square.row, piece_square.col
+
         if piece.name == "pawn":
             updown = piece.direction  # 1 for black, -1 for white
             take_moves = [(row + updown, col - 1), (row + updown, col + 1)]
@@ -313,7 +356,7 @@ class Board:
             return ret
 
         elif piece.name == "knight":
-            for move in self.knight_moves(piece, row, col):
+            for move in self.knight_moves(piece_square):
                 ret.append(move.target)
             return ret
 
@@ -322,7 +365,7 @@ class Board:
 
         # bishop, rook or queen
         else:
-            for move in self.line_moves(piece, row, col):
+            for move in self.line_moves(piece_square):
                 ret.append(move.target)
             return ret
 
@@ -345,7 +388,7 @@ class Board:
         ret = []
         piece_squares = self.get_rival_pieces(color)
         for square in piece_squares:
-            ret += self.calc_sees(square.piece, square.row, square.col)
+            ret += self.calc_sees(square)
 
         return ret
 
@@ -355,7 +398,7 @@ class Board:
         all_moves = []
         rival_pieces = self.get_team_pieces(rival_color)
         for square in rival_pieces:
-            all_moves += self.calc_moves(square.piece, square.row, square.col)
+            all_moves += self.calc_moves(square)
         # print(all_moves)
         if not all_moves:  # no moves
             return True

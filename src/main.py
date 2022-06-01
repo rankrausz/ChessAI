@@ -144,7 +144,7 @@ class Main:
                             else:  # click new square
                                 board.clicked_square = square
                                 # calculate possible moves
-                                board.possible_moves = board.calc_moves(piece, clicked_row, clicked_col)
+                                board.possible_moves = board.calc_moves(square)
 
                     elif event.type == pygame.KEYDOWN:
                         # press 'r' to restart

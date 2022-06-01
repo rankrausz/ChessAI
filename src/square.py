@@ -11,6 +11,9 @@ class Square:
         self.color = self.org_color
         self.possible = False
 
+        self.seen_by_w = False
+        self.seen_by_b = False
+
     def change_piece(self, piece):
         self.piece = piece
 
