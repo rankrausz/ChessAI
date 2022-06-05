@@ -20,12 +20,14 @@ class Main:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Chess")
 
-        self.board = Board()
-        self.gui = GUI(self.board)
-        self.white_to_move = True
-        self.game_over = False
         self.moves = []
         self.colors = ["black", "white"]
+
+        self.board = Board()
+        self.gui = GUI(self.board, self.moves)
+
+        self.white_to_move = True
+        self.game_over = False
 
     def opening_screen(self):
         screen = self.screen
@@ -90,14 +92,13 @@ class Main:
             # make AI move
             if current_color == 'black' and ai and not self.game_over:
                 print("AI is thinking...")
-                best_score = AI.INFINITI
+                best_score = AI.INFINITY
                 best_move = 0
                 for move in board.all_moves('black'):
-
                     board.make_move(move)
-                    score = AI.minimax(board, depth, -AI.INFINITI, AI.INFINITI, True)
+                    score = AI.minimax(board, depth, -AI.INFINITY, AI.INFINITY, True)
                     # score = AI.negamax(board, depth, -AI.INFINITI, AI.INFINITI, True)
-                    board.undo_move(move, True)
+                    board.undo_move(move)
                     if score < best_score:
                         best_score = score
                         best_move = move
@@ -109,6 +110,7 @@ class Main:
                 AI.COUNT = 0
                 self.white_to_move = not self.white_to_move
 
+            # Player move
             else:
                 for event in pygame.event.get():
 
@@ -171,10 +173,9 @@ class Main:
             gui.draw_pieces(screen)
             if self.game_over:
                 GUI.draw_game_over(screen)
-            # font = pygame.font.Font('freesansbold.ttf', 32)
-            # evalu = font.render(f'{AI.evaluate(board)}', True, (0, 0, 0))
-            # menu_rect = evalu.get_rect(center=(HEIGHT // 2, WIDTH // 2))
-            # screen.blit(evalu, menu_rect)
+
+            # show evaluation on screen
+            # gui.draw_evaluation(screen)
 
             pygame.display.update()
 

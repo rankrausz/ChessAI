@@ -10,6 +10,8 @@ LIGHT_GREEN = (234, 235, 200)
 DARK_GREEN = (119, 154, 88)
 BROWN = (196, 112, 95)
 L_BROWN = (240, 208, 187)
+YELLOW = ( 236, 205, 35 )
+L_YELLOW = (244, 212, 134)
 
 # Color choice
 COLORS = (L_BROWN, BROWN)  # [light, dark]

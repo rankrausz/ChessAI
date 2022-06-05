@@ -11,11 +11,10 @@ class Board:
         self.squares = []
         self.clicked_square = None
         self.possible_moves = []
+        self.last_squares = []
 
         self._create()
         self._add_pieces_fen(START_FEN)
-        # self._add_pieces("white")
-        # self._add_pieces("black")
 
     def _create(self):  # private methods
         """
@@ -82,20 +81,26 @@ class Board:
                 color = colors[char.islower()]
                 char = char.lower()
                 if char == 'p':
-                    squares[row][col].change_piece(Pawn(color))
+                    pawn = Pawn(color)
+                    squares[row][col].change_piece(pawn)
                 elif char == 'b':
-                    squares[row][col].change_piece(Bishop(color))
+                    bishop = Bishop(color)
+                    squares[row][col].change_piece(bishop)
                 elif char == 'n':
-                    squares[row][col].change_piece(Knight(color))
+                    knight = Knight(color)
+                    squares[row][col].change_piece(knight)
                 elif char == 'r':
-                    squares[row][col].change_piece(Rook(color))
+                    rook = Rook(color)
+                    squares[row][col].change_piece(rook)
                 elif char == 'q':
-                    squares[row][col].change_piece(Queen(color))
+                    queen = Queen(color)
+                    squares[row][col].change_piece(queen)
                 elif char == 'k':
-                    squares[row][col].change_piece(King(color))
+                    king = King(color)
+                    squares[row][col].change_piece(king)
                 col += 1
 
-    # ============================= Moving methods =============================
+    # ============================= Moving methods ===============================
 
     def make_move(self, move, update_moved=False):
         """
@@ -173,14 +178,13 @@ class Board:
         try a move to see if there is check
         """
         ret = True
-
         color = move.start.piece.color
-        self.make_move(move)  # making the move
 
+        self.make_move(move)  # making the move
         if self.in_check(color):
             ret = False
-
         self.undo_move(move)  # un-making the move
+
         return ret
 
     def calc_moves(self, piece_square):
@@ -189,15 +193,13 @@ class Board:
         :return a list of locations (row, col) representing possible new location
         """
         piece = piece_square.piece
-        row, col = piece_square.row, piece_square.col
-        moves = []
-        if piece.name == "pawn":
+        if isinstance(piece, Pawn):
             moves = self.pawn_moves(piece_square)
 
-        elif piece.name == "knight":
+        elif isinstance(piece, Knight):
             moves = self.knight_moves(piece_square)
 
-        elif piece.name == "king":
+        elif isinstance(piece, King):
             moves = self.king_moves(piece_square)
 
         # bishop, rook or queen
@@ -255,7 +257,7 @@ class Board:
                 ret.append(Move(start, target))
 
         # checking two steps forward
-        if not pawn.moved:
+        if (pawn.color == 'black' and row == 1) or (pawn.color == 'white' and row == 6):
             move_row, move_col = row + 2 * updown, col
             if Square.in_range(move_row, move_col):
                 if not self.squares[move_row][move_col].has_piece() and \
@@ -424,6 +426,8 @@ class Board:
             for col in range(COLS):
                 if self.squares[row][col].has_team_piece(color):
                     ret.append(self.squares[row][col])
+                    if self.squares[row][col].piece == None:
+                        print('why')
         return ret
 
     def get_king_square(self, color):

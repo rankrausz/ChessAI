@@ -1,16 +1,15 @@
 import pygame
 import os
 from constants import *
-from board import Board
+from ai import AI
 
 
 class GUI:
 
-    def __init__(self, board):
+    def __init__(self, board, moves):
         self.board = board
         self.squares = self.board.squares
-        self.white_check = False
-        self.black_check = False
+        self.moves = moves
 
     def draw_background(self, surface):
 
@@ -20,6 +19,15 @@ class GUI:
                 row, col = square.row, square.col
                 rect = (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
                 pygame.draw.rect(surface, square.color, rect)
+
+        # highlight last move
+        if self.moves:
+            move = self.moves[-1]
+            squares = ((move.start, L_YELLOW), (move.target, YELLOW))
+            for square, color in squares:
+                row, col = square.row, square.col
+                rect = (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+                pygame.draw.rect(surface, color, rect)
 
         # drawing frame around clicked square
         if self.board.clicked_square:
@@ -71,3 +79,9 @@ class GUI:
         center_img = WIDTH // 2, HEIGHT - HEIGHT // 4
         img_frame = image.get_rect(center=center_img)
         surface.blit(image, img_frame)
+
+    def draw_evaluation(self, screen):
+        font = pygame.font.Font('freesansbold.ttf', 32)
+        evalu = font.render(f'{AI.evaluate(self.board)}', True, (0, 0, 0))
+        menu_rect = evalu.get_rect(center=(HEIGHT // 2, WIDTH // 2))
+        screen.blit(evalu, menu_rect)
