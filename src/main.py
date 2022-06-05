@@ -1,13 +1,11 @@
 import pygame
 import sys
-import copy
 import random
 
 from constants import *
 from gui import GUI
 from board import Board
 from ai import AI
-from move import Move
 
 
 from button import Button

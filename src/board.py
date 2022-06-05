@@ -2,7 +2,6 @@ from constants import *
 from square import Square
 from piece import *
 from move import Move
-import copy
 
 
 class Board:
@@ -203,11 +202,10 @@ class Board:
             moves = self.king_moves(piece_square)
 
         # bishop, rook or queen
-        else:
+        elif isinstance(piece, Queen) or isinstance(piece, Rook) or isinstance(piece, Bishop):
             moves = self.line_moves(piece_square)
 
         ret = []
-        # start = self.squares[row][col]
         for move in moves:
             if self.can_move(move):
                 ret.append(move)
@@ -426,7 +424,7 @@ class Board:
             for col in range(COLS):
                 if self.squares[row][col].has_team_piece(color):
                     ret.append(self.squares[row][col])
-                    if self.squares[row][col].piece == None:
+                    if self.squares[row][col].piece is None:  ###
                         print('why')
         return ret
 
@@ -459,13 +457,12 @@ class Board:
             ret.append(move.target)
         return ret
 
-    def clone(self):
-        cloned = Board()
-        cloned._create()
-        all_pieces = self.get_team_pieces('white') + self.get_team_pieces('black')
-        for square in all_pieces:
-            row, col = square.row, square.col
-            cloned.squares[row][col].piece = copy.deepcopy(square.piece)
-        return cloned
-
+    # def clone(self):
+    #     cloned = Board()
+    #     cloned._create()
+    #     all_pieces = self.get_team_pieces('white') + self.get_team_pieces('black')
+    #     for square in all_pieces:
+    #         row, col = square.row, square.col
+    #         cloned.squares[row][col].piece = copy.deepcopy(square.piece)
+    #     return cloned
 
