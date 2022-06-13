@@ -9,7 +9,7 @@ A chess game with GUI made with python & pygame.
 
 ## How does it work?
 
-AI uses minimax algorithm with alpha-beta optimiziation. The algorithm will look at all of the moves currently possible in the position, and then for each one look at all of the responses the rival has, and so on until a pre-defined depth. when the desired depth is achieved it performs a static evaluation of the position. These are values that are then passed up the tree so that the computer can choose the best move - you can read further [here](https://en.wikipedia.org/wiki/Minimax#Minimax_algorithm_with_alternate_moves).
+AI uses minimax algorithm with alpha-beta optimiziation. The algorithm will look at all of the moves currently possible in the position, and then for each one look at all of the responses the rival has, and so on until a pre-defined depth is reached. when the desired depth is achieved it performs a static evaluation of the position. These are values that are then passed up the tree so that the computer can choose the best move - you can read further [here](https://en.wikipedia.org/wiki/Minimax#Minimax_algorithm_with_alternate_moves).
 
 The maximum search depth is only 3 at the moment (not ply- meaning it searches 3 moves ahead). Any higher and it would take too much time.
 
