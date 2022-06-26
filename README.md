@@ -21,9 +21,9 @@ This version has a lot of place for improvement, but without speed it can not be
 
 ## Wanna play?
 
-To run the game, make sure your working directory is ChessAI and run main.py.
+To run the game you'll need to install PyGame, make sure your working directory is ChessAI and run main.py.
 
-press r to go to main menu.
+press r to go to main menu
 
 press u to undo last move
 
